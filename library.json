@@ -1,0 +1,19 @@
+{
+  "name": "Oled1306Mini",
+  "version": "1.0.0",
+  "description": "SSD1306 OLED I2C library for CH32V003 and WCH RISC-V MCUs.",
+  "keywords": ["oled", "ssd1306", "128x64", "128x32", "display", "CH32V003", "WCH", "RISC-V", "bare-metal"],
+  "authors": {
+    "name": "A. Kolesov",
+    "maintainer": true
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AndyTakker/Oled1306Mini.git"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/AndyTakker/Oled1306Mini",
+  "frameworks": "*",
+  "platforms": ["wch-riscv"],
+  "headers": ["Oled1306Mini.hpp"]
+}
