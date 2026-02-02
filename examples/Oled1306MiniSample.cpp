@@ -21,14 +21,13 @@ int main(void) {
 
   // --------------------------
   // СЕРВИС
-  oled.init(); // инициализация
-  // настройка скорости I2C, если не сделано для другого устройства на шине
-  Wire.setClock(400000L); // макс. 800'000. Ниже 250000 - не работает
-  oled.flipV(true);       // отразить по вертикали
-  oled.flipH(true);       // отразить по горизонтали
-  oled.clear();           // очистить дисплей (или буфер)
-  oled.setContrast(64);   // яркость 0..255
-  oled.setPower(true);    // true/false - включить/выключить дисплей
+  // Инициализируем и сразу укажем скорость I2C
+  oled.init(400000UL);  // макс. 800'000. Ниже 250000 - не работает
+  oled.flipV(true);     // отразить по вертикали
+  oled.flipH(true);     // отразить по горизонтали
+  oled.clear();         // очистить дисплей (или буфер)
+  oled.setContrast(64); // яркость 0..255
+  oled.setPower(true);  // true/false - включить/выключить дисплей
 
   // --------------------------
 #ifndef OLED_NO_PRINT
@@ -52,7 +51,7 @@ int main(void) {
   oled.home();
   oled.setScale(3);
   oled.print("TEXT");
-  delay(500);
+  delay(2500);
 
   // --------------------------
   oled.clear();
@@ -146,7 +145,7 @@ int main(void) {
 
   // --- Выводим текст -----------------------
   oled.clear();
-  oled.invertText(false); 
+  oled.invertText(false);
   // oled.autoPrintln(true);
   oled.setScale(1);
   uint8_t x = 0, y = 0;

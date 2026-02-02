@@ -183,8 +183,8 @@ class OledMini {
 
   // ============================= СЕРВИС ===============================
   // инициализация
-  void init() {
-    Wire.begin();
+  void init(uint32_t bound = 400000) {
+    Wire.begin(bound);
 
     beginCommand();
     for (uint8_t i = 0; i < sizeof(_oled_init); i++)
