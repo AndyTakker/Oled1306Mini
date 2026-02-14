@@ -40,9 +40,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifndef constrain
+#undef constrain
 #define constrain(x, a, b) ((x) < (a) ? (a) : ((x) > (b) ? (b) : (x)))
-#endif
+
 #define bitSet(value, bit, bitvalue) ((bitvalue) ? (value) |= (1UL << (bit)) : (value) &= ~(1UL << (bit)))
 #define bitGet(value, bit) (((value) >> (bit)) & 0x01)
 
