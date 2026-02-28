@@ -80,10 +80,10 @@
 #define OLED_HORIZONTAL 0x00
 #define OLED_VERTICAL 0x01
 
-#define OLED_NORMAL_V 0xC0
-#define OLED_FLIP_V 0xC8
-#define OLED_NORMAL_H 0xA0
-#define OLED_FLIP_H 0xA1
+#define OLED_NORMAL_V 0xC8
+#define OLED_FLIP_V 0xC0
+#define OLED_NORMAL_H 0xA1
+#define OLED_FLIP_H 0xA0
 
 #define OLED_CONTRAST 0x81
 #define OLED_SETCOMPINS 0xDA
