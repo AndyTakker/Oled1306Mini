@@ -13,14 +13,12 @@
 #define delay(x) Delay_Ms(x)
 
 OledMini<SSD1306_128x64> oled(0x3C);
-// GyvOLED<SSD1306_128x32> oled(0x3C);
 
 int main(void) {
   SystemCoreClockUpdate();
   Delay_Init();
 
   // --------------------------
-  // СЕРВИС
   // Инициализируем и сразу укажем скорость I2C
   oled.init(400000UL);  // макс. 800'000. Ниже 250000 - не работает
   // oled.flipV(true);     // отразить по вертикали

@@ -93,67 +93,12 @@
 #define OLED_COLUMNADDR 0x21
 #define OLED_PAGEADDR 0x22
 #define OLED_CHARGEPUMP 0x8D
+#define OLED_SETDISPLAYOFFSET 0xD3
+#define OLED_DISPLAY_RAM 0xA4
+#define OLED_STARTLINE 0x40
 
 #define OLED_NORMALDISPLAY 0xA6
 #define OLED_INVERTDISPLAY 0xA7
-
-#define BUFSIZE_128x64 (128 * 64 / 8)
-#define BUFSIZE_128x32 (128 * 32 / 8)
-
-// список инициализации
-static const uint8_t _oled_init[] = {
-    OLED_DISPLAY_OFF, // 0xAE - Выключение дисплея
-    OLED_CLOCKDIV,    // 0xD5 - Настройка делителя частоты
-    0x80,             // Значение: 1000 0000b
-                      // Бит 7-4: Fosc частота (0-15)
-                      // Бит 3-0: Делитель (1-16)
-                      // 0x80 = Fosc=8, Div=1 (по умолчанию)
-
-    OLED_CHARGEPUMP, // 0x8D - Настройка встроенного DC/DC преобразователя
-    0x14,            // 0x14 = Включить charge pump (для 3.3V питания)
-                     // 0x10 = Выключить (требуется внешнее VCC)
-    // Настройка мультиплексирования (выполняется в методе inint())
-    // 0xA8, // Set multiplex ratio
-    // 0x3F, // 64MUX for 128x64 (0x3F = 63+1)
-    //       // Для 128x32: 0x1F (31+1)
-
-    // Смещение дисплея
-    // 0xD3, // Set display offset
-    // 0x00, // No offset
-    // Начальная линия
-    // 0x40,                 // Set start line to 0
-
-    OLED_ADDRESSING_MODE, // 0x20 - Режим адресации памяти
-                          // 0x00 = Horizontal addressing mode
-                          // 0x01 = Vertical addressing mode
-                          // 0x02 = Page addressing mode (по умолчанию)
-    OLED_VERTICAL,        // 0x01 = Vertical addressing mode !!! Критически важно для функций масштабирования текста
-                          // и рисования картинок
-
-    OLED_NORMAL_H, // 0xA1 (0xA0) - Ориентация по горизонтали
-                   // 0xA1 = дисплей отражен по горизонтали (столбец 127 -> 0)
-                   // 0xA0 = нормальная ориентация (столбец 0 -> 127)
-    // OLED_FLIP_H,
-
-    OLED_NORMAL_V, // 0xC8 (0xC0) - Ориентация по вертикали
-                   // 0xC8 = дисплей отражен по вертикали (строка 63 -> 0)
-                   // 0xC0 = нормальная ориентация (строка 0 -> 63)
-    // OLED_FLIP_V,
-
-    OLED_CONTRAST,      // 0x81 - Установка контрастности
-    0x7F,               // Значение контраста: 0x00-0xFF
-                        // 0x7F = среднее значение (примерно 50%)
-    OLED_SETVCOMDETECT, // 0xDB - Настройка уровня VCOM
-    0x40,               // 0x40 = 0.83 × VCC (типичное значение)
-                        // Возможные значения: 0x00, 0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70
-    // Конфигурация пинов COM (выполняется в методе inint())
-    // 0xDA,               // Set COM pins hardware configuration
-    // 0x12,               // Для 128x64: 0x12, для 128x32: 0x02
-    OLED_NORMALDISPLAY, // 0xA6 - Нормальный режим отображения
-                        // 0xA6 = нормальный (1 = пиксель включен)
-                        // 0xA7 = инверсный (0 = пиксель включен)
-    OLED_DISPLAY_ON,    // 0xAF - Включение дисплея
-};
 
 // ========================== КЛАСС КЛАСС КЛАСС =============================
 template <int _TYPE>
@@ -184,6 +129,7 @@ class OledMini {
   }
 
   // ============================= СЕРВИС ===============================
+
   // инициализация
   void init(uint32_t bound = 400000) {
     Wire.begin(bound);
@@ -192,15 +138,6 @@ class OledMini {
     for (uint8_t i = 0; i < sizeof(_oled_init); i++)
       sendByte(_oled_init[i]);
     endTransm();
-
-    beginCommand();
-    sendByte(OLED_SETCOMPINS);
-    sendByte(_TYPE ? OLED_HEIGHT_64 : OLED_HEIGHT_32);
-    sendByte(OLED_SETMULTIPLEX);
-    sendByte(_TYPE ? OLED_64 : OLED_32);
-    endTransm();
-
-    setCursorXY(0, 0);
   }
 
   // очистить дисплей
@@ -373,6 +310,7 @@ class OledMini {
   bool isEnd() { return (_y > _maxRow); }
 
   // ================================== ГРАФИКА ==================================
+
   // точка (заливка 1/0)
   void dot(int x, int y, uint8_t fill = 1) {
     if (x < 0 || x > _maxX || y < 0 || y > _maxY)
@@ -832,6 +770,54 @@ class OledMini {
   uint8_t _lastChar;
   uint8_t _writes = 0;
   uint8_t _mode = 2;
+
+  // Последовательность команд начальной инициализации дисплея
+  const uint8_t _oled_init[23] = {
+      OLED_DISPLAY_OFF, // 0xAE - Выключение дисплея
+
+      OLED_SETMULTIPLEX,           // Set multiplex ratio
+      (_TYPE ? OLED_64 : OLED_32), // Для 128x32: 0x1F (31+1)
+
+      OLED_SETDISPLAYOFFSET, // Set display offset
+      0x00,
+
+      OLED_STARTLINE, // Set start line to 0
+
+      OLED_NORMAL_H, // 0xA1 (0xA0) - Ориентация по горизонтали
+      OLED_NORMAL_V, // 0xC8 (0xC0) - Ориентация по вертикали
+
+      OLED_SETCOMPINS,                           // Set COM pins hardware configuration
+      (_TYPE ? OLED_HEIGHT_64 : OLED_HEIGHT_32), // Для 128x64: 0x12, для 128x32: 0x02
+
+      OLED_CONTRAST, // 0x81 - Установка контрастности
+      0x7F,          // Значение контраста: 0x00-0xFF
+
+      OLED_DISPLAY_RAM, // 0xA4 - Режим памяти дисплея
+
+      OLED_NORMALDISPLAY, // 0xA6 - Нормальный режим отображения, 0xA7 = инверсный
+
+      OLED_CLOCKDIV, // 0xD5 - Настройка делителя частоты
+      0x80,          // Значение: 1000 0000b,  0x80 = Fosc=8, Div=1 (по умолчанию)
+                     // Бит 7-4: Fosc частота (0-15)
+                     // Бит 3-0: Делитель (1-16)
+                     
+      OLED_CHARGEPUMP, // 0x8D - Настройка встроенного DC/DC преобразователя
+      0x14,            // 0x14 = Включить charge pump (для 3.3V питания)
+                       // 0x10 = Выключить (требуется внешнее VCC)
+
+      OLED_ADDRESSING_MODE, // 0x20 - Режим адресации памяти
+                            // 0x00 = Horizontal addressing mode
+                            // 0x01 = Vertical addressing mode
+                            // 0x02 = Page addressing mode (по умолчанию)
+      OLED_VERTICAL,        // 0x01 = Vertical addressing mode !!! Критически важно для функций масштабирования текста
+                            // и рисования картинок
+
+      OLED_SETVCOMDETECT, // 0xDB - Настройка уровня VCOM
+      0x40,               // 0x40 = 0.83 × VCC (типичное значение)
+                          // Возможные значения: 0x00, 0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70
+
+      OLED_DISPLAY_ON     // 0xAF - Включение дисплея
+  };
 };
 
 template <int _TYPE>
